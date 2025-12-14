@@ -1824,7 +1824,32 @@
             "uploadingDetails": "Téléchargement du fichier \"{{file}}\"...",
             "uploadSuccessful": "Encodage du fichier réussi !",
             "uploadSuccessfulDetails": "Les fichiers ont été encodés en tant que \"{{file}}\" et ajoutés à la bibliothèque avec succès !",
-            "uploadText": "Cliquez ou faites glisser jusqu'à {{maxFiles}} fichiers audio que vous souhaitez convertir en fichier taf pour les télécharger dans cette zone"
+            "uploadText": "Cliquez ou faites glisser jusqu'à {{maxFiles}} fichiers audio que vous souhaitez convertir en fichier taf pour les télécharger dans cette zone",
+            "urlFetch": {
+                "title": "Ajouter depuis une URL (YouTube, SoundCloud, etc.)",
+                "inputPlaceholder": "Collez une URL (YouTube, SoundCloud, Bandcamp...)",
+                "addUrl": "Ajouter",
+                "supportedSources": "Sources supportées",
+                "supportedSourcesDescription": "yt-dlp supporte de nombreuses sources. Voici les plus populaires :",
+                "urlCount": "{{count}} URL(s) ajoutée(s)",
+                "clearAll": "Tout effacer",
+                "fetchingInfo": "Récupération des infos...",
+                "ready": "Prêt",
+                "downloading": "Téléchargement...",
+                "downloaded": "Téléchargé",
+                "error": "Erreur",
+                "pending": "En attente",
+                "invalidUrl": "URL invalide",
+                "invalidUrlDetails": "Veuillez entrer une URL valide",
+                "quality": {
+                    "best": "Meilleure qualité",
+                    "320": "320 kbps",
+                    "256": "256 kbps",
+                    "192": "192 kbps",
+                    "128": "128 kbps",
+                    "worst": "Plus petit fichier"
+                }
+            }
         },
         "errorFetchingSystemSounds": "Erreur lors de la récupération des sons du système",
         "errorFetchingTonies": "Erreur lors de la récupération des Tonies",

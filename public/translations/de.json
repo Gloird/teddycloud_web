@@ -1824,7 +1824,32 @@
             "uploadingDetails": "Datei \"{{file}}\" wird hochgeladen...",
             "uploadSuccessful": "Dateikodierung erfolgreich!",
             "uploadSuccessfulDetails": "Dateien wurden als \"{{file}}\" kodiert und erfolgreich zur Bibliothek hinzugefügt!",
-            "uploadText": "Klicke oder ziehe bis zu {{maxFiles}} Audiodateien, die du in eine TAF-Datei konvertieren möchtest, zum Hochladen in diesen Bereich"
+            "uploadText": "Klicke oder ziehe bis zu {{maxFiles}} Audiodateien, die du in eine TAF-Datei konvertieren möchtest, zum Hochladen in diesen Bereich",
+            "urlFetch": {
+                "title": "Von URL hinzufügen (YouTube, SoundCloud, etc.)",
+                "inputPlaceholder": "URL einfügen (YouTube, SoundCloud, Bandcamp...)",
+                "addUrl": "Hinzufügen",
+                "supportedSources": "Unterstützte Quellen",
+                "supportedSourcesDescription": "yt-dlp unterstützt viele Quellen. Hier sind die beliebtesten:",
+                "urlCount": "{{count}} URL(s) hinzugefügt",
+                "clearAll": "Alle löschen",
+                "fetchingInfo": "Infos werden abgerufen...",
+                "ready": "Bereit",
+                "downloading": "Wird heruntergeladen...",
+                "downloaded": "Heruntergeladen",
+                "error": "Fehler",
+                "pending": "Ausstehend",
+                "invalidUrl": "Ungültige URL",
+                "invalidUrlDetails": "Bitte gib eine gültige URL ein",
+                "quality": {
+                    "best": "Beste Qualität",
+                    "320": "320 kbps",
+                    "256": "256 kbps",
+                    "192": "192 kbps",
+                    "128": "128 kbps",
+                    "worst": "Kleinste Datei"
+                }
+            }
         },
         "errorFetchingSystemSounds": "Fehler beim Abrufen der System Sounds",
         "errorFetchingTonies": "Fehler beim Abrufen der Tonies",

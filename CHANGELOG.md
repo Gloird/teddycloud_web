@@ -2,6 +2,7 @@
 
 ## 0.6.6
 
+-   gui: Added URL audio extraction feature in TAF Encoder - allows fetching audio from YouTube, SoundCloud, and 1000+ other sources via yt-dlp integration
 -   gui: Added search field in audio player
 -   gui: Only show tags once in Audioplayer
 -   gui: Use new backend generic request API for macvendor.com requests [https://github.com/toniebox-reverse-engineering/teddycloud_web/issues/161](https://github.com/toniebox-reverse-engineering/teddycloud_web/issues/161)

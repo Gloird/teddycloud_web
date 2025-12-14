@@ -8,9 +8,11 @@ import { MAX_FILES } from "../../../constants/numbers";
 import { MyUploadFile } from "../../../utils/audio/audioEncoder";
 import { DraggableUploadListItem } from "../common/elements/DraggableUploadListItem";
 import { useEncoder } from "./hooks/useEncoder";
+import { useUrlFetch } from "./hooks/useUrlFetch";
 import { useDirectoryCreate } from "../common/hooks/useCreateDirectory";
 import { DirectoryTreeSelect } from "../common/elements/DirectoryTreeSelect";
 import CreateDirectoryModal from "../common/modals/CreateDirectoryModal";
+import { UrlFetchPanel } from "./UrlFetchPanel";
 import { canHover } from "../../../utils/browser/browserUtils";
 
 const { useToken } = theme;
@@ -52,6 +54,8 @@ export const Encoder: React.FC = () => {
         invalidCharactersAsString,
     } = useEncoder();
 
+    const urlFetch = useUrlFetch();
+
     const {
         open: isCreateDirectoryModalOpen,
         createDirectoryPath,
@@ -69,9 +73,37 @@ export const Encoder: React.FC = () => {
         setRebuildList,
     });
 
+    // Check if we have content (files or URLs) to encode
+    const hasContent = fileList.length > 0 || urlFetch.hasReadyUrls;
+
+    // Combined encode handler that first downloads URLs, then encodes all sources
+    const handleCombinedEncode = async () => {
+        // If we have URLs to download, download them first
+        if (urlFetch.hasReadyUrls) {
+            const downloadedFiles = await urlFetch.downloadAllUrls();
+            if (downloadedFiles.length === 0 && fileList.length === 0) {
+                // All downloads failed and no local files
+                return;
+            }
+            // Note: Downloaded files will be on the server, so we use server-side encoding
+            // The server will need to handle combining URL-downloaded files with uploaded files
+        }
+
+        // Proceed with encoding (server-side or browser-side)
+        if (useFrontendEncoding && fileList.length > 0 && !urlFetch.hasReadyUrls) {
+            // WASM encoding only works with local files, not URL downloads
+            handleWasmUpload();
+        } else {
+            handleUpload();
+        }
+    };
+
     return (
         <>
             <Space orientation="vertical" style={{ display: "flex" }}>
+                {/* URL Fetch Panel - Always visible at top */}
+                <UrlFetchPanel urlFetch={urlFetch} disabled={uploading || processing} />
+
                 <DndContext sensors={[sensor]} onDragEnd={onDragEnd}>
                     <SortableContext
                         items={fileList.map((i) => i.uid)}
@@ -104,29 +136,31 @@ export const Encoder: React.FC = () => {
                     </SortableContext>
                 </DndContext>
 
-                {fileList.length > 0 ? (
+                {hasContent ? (
                     <>
-                        <Space
-                            orientation="horizontal"
-                            style={{
-                                width: "100%",
-                                display: "flex",
-                                alignItems: "flex-start",
-                                flexWrap: "wrap",
-                            }}
-                        >
-                            <Button type="default" disabled={uploading} onClick={sortFileListAlphabetically}>
-                                {t("tonies.encoder.sortAlphabetically")}
-                            </Button>
-                            <Button
-                                type="default"
-                                disabled={uploading}
-                                style={{ marginRight: 16 }}
-                                onClick={clearFileList}
+                        {fileList.length > 0 && (
+                            <Space
+                                orientation="horizontal"
+                                style={{
+                                    width: "100%",
+                                    display: "flex",
+                                    alignItems: "flex-start",
+                                    flexWrap: "wrap",
+                                }}
                             >
-                                {t("tonies.encoder.clearList")}
-                            </Button>
-                        </Space>
+                                <Button type="default" disabled={uploading} onClick={sortFileListAlphabetically}>
+                                    {t("tonies.encoder.sortAlphabetically")}
+                                </Button>
+                                <Button
+                                    type="default"
+                                    disabled={uploading}
+                                    style={{ marginRight: 16 }}
+                                    onClick={clearFileList}
+                                >
+                                    {t("tonies.encoder.clearList")}
+                                </Button>
+                            </Space>
+                        )}
                         <Divider />
                         <div style={{ width: "100%" }} className="encoder">
                             <Space orientation="vertical" style={{ width: "100%" }}>
@@ -184,7 +218,7 @@ export const Encoder: React.FC = () => {
                                         value={tafFilename}
                                         style={{ maxWidth: 300 }}
                                         status={
-                                            (fileList.length > 0 && tafFilename === "") || hasInvalidChars
+                                            (hasContent && tafFilename === "") || hasInvalidChars
                                                 ? "error"
                                                 : ""
                                         }
@@ -219,15 +253,17 @@ export const Encoder: React.FC = () => {
                                     />
                                     <Button
                                         type="primary"
-                                        onClick={useFrontendEncoding ? handleWasmUpload : handleUpload}
-                                        disabled={fileList.length === 0 || tafFilename === "" || hasInvalidChars}
-                                        loading={uploading || processing}
+                                        onClick={handleCombinedEncode}
+                                        disabled={!hasContent || tafFilename === "" || hasInvalidChars || urlFetch.isProcessing}
+                                        loading={uploading || processing || urlFetch.isProcessing}
                                     >
                                         {uploading
                                             ? processing
                                                 ? t("tonies.encoder.processing")
                                                 : t("tonies.encoder.uploading")
-                                            : t("tonies.encoder.encode")}
+                                            : urlFetch.isProcessing
+                                                ? t("tonies.encoder.urlFetch.downloading")
+                                                : t("tonies.encoder.encode")}
                                     </Button>
                                 </div>
                             </Space>

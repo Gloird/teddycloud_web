@@ -1824,7 +1824,32 @@
             "uploadingDetails": "Uploading file \"{{file}}\"...",
             "uploadSuccessful": "File encoding successful!",
             "uploadSuccessfulDetails": "Files were encoded as \"{{file}}\" and added to the library successful!",
-            "uploadText": "Click or drag up to {{maxFiles}} audio files you want to convert to a taf file to upload them in this area"
+            "uploadText": "Click or drag up to {{maxFiles}} audio files you want to convert to a taf file to upload them in this area",
+            "urlFetch": {
+                "title": "Add from URL (YouTube, SoundCloud, etc.)",
+                "inputPlaceholder": "Paste a URL (YouTube, SoundCloud, Bandcamp...)",
+                "addUrl": "Add",
+                "supportedSources": "Supported sources",
+                "supportedSourcesDescription": "yt-dlp supports many sources. Here are the most popular ones:",
+                "urlCount": "{{count}} URL(s) added",
+                "clearAll": "Clear all",
+                "fetchingInfo": "Fetching info...",
+                "ready": "Ready",
+                "downloading": "Downloading...",
+                "downloaded": "Downloaded",
+                "error": "Error",
+                "pending": "Pending",
+                "invalidUrl": "Invalid URL",
+                "invalidUrlDetails": "Please enter a valid URL",
+                "quality": {
+                    "best": "Best quality",
+                    "320": "320 kbps",
+                    "256": "256 kbps",
+                    "192": "192 kbps",
+                    "128": "128 kbps",
+                    "worst": "Smallest file"
+                }
+            }
         },
         "errorFetchingSystemSounds": "Error fetching system sounds",
         "errorFetchingTonies": "Error fetching Tonies",
