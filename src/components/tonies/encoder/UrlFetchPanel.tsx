@@ -135,14 +135,13 @@ export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, disabled
                                         onKeyDown={handleInputKeyDown}
                                         disabled={disabled || isProcessing}
                                         prefix={<LinkOutlined />}
-                                        style={{ flex: 1, minWidth: 320 }}
+                                        style={{ flex: 1, minWidth: '72%' }}
                                     />
                                     <Select
                                         size="middle"
                                         value={quality}
                                         onChange={setQuality}
                                         disabled={disabled || isProcessing}
-                                        style={{ width: 120, minWidth: 100 }}
                                         options={QUALITY_OPTIONS.map((opt: { value: string; label: string }) => ({
                                             value: opt.value,
                                             label: t(`tonies.encoder.urlFetch.quality.${opt.value}`, opt.label),
