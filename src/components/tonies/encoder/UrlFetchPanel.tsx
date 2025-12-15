@@ -128,25 +128,28 @@ export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, disabled
                                 {/* Input Section */}
                                 <Space.Compact style={{ width: "100%" }}>
                                     <Input
+                                        size="middle"
                                         placeholder={t("tonies.encoder.urlFetch.inputPlaceholder")}
                                         value={inputUrl}
                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInputUrl(e.target.value)}
                                         onKeyDown={handleInputKeyDown}
                                         disabled={disabled || isProcessing}
                                         prefix={<LinkOutlined />}
-                                        style={{ flex: 1 }}
+                                        style={{ flex: 1, minWidth: 320 }}
                                     />
                                     <Select
+                                        size="middle"
                                         value={quality}
                                         onChange={setQuality}
                                         disabled={disabled || isProcessing}
-                                        style={{ width: 160 }}
+                                        style={{ width: 120, minWidth: 100 }}
                                         options={QUALITY_OPTIONS.map((opt: { value: string; label: string }) => ({
                                             value: opt.value,
                                             label: t(`tonies.encoder.urlFetch.quality.${opt.value}`, opt.label),
                                         }))}
                                     />
                                     <Button
+                                        size="middle"
                                         type="primary"
                                         onClick={addUrl}
                                         disabled={disabled || isProcessing || !inputUrl.trim()}
