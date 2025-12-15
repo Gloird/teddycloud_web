@@ -51,6 +51,7 @@ export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, disabled
         clearUrlList,
         formatDuration,
         downloadAllUrls,
+        downloadUrl,
         hasReadyUrls,
     } = urlFetch;
 
