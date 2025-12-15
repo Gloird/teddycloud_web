@@ -216,29 +216,29 @@ export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, disabled
                                             renderItem={(item: UrlItem) => (
                                                 <List.Item
                                                     key={item.id}
-                                                            actions={[
-                                                                <Button
-                                                                    key="download"
-                                                                    type="text"
-                                                                    icon={<CloudDownloadOutlined />}
-                                                                    onClick={() => downloadUrl(item)}
-                                                                    disabled={
-                                                                        disabled || isProcessing || item.status === "downloading"
-                                                                    }
-                                                                />,
-                                                                <Button
-                                                                    key="delete"
-                                                                    type="text"
-                                                                    danger
-                                                                    icon={<DeleteOutlined />}
-                                                                    onClick={() => removeUrl(item.id)}
-                                                                    disabled={
-                                                                        disabled ||
-                                                                        isProcessing ||
-                                                                        item.status === "downloading"
-                                                                    }
-                                                                />,
-                                                            ]}
+                                                    actions={[
+                                                        <Button
+                                                            key="download"
+                                                            type="text"
+                                                            icon={<CloudDownloadOutlined />}
+                                                            onClick={() => downloadUrl(item)}
+                                                            disabled={
+                                                                disabled || isProcessing || item.status === "downloading"
+                                                            }
+                                                        />,
+                                                        <Button
+                                                            key="delete"
+                                                            type="text"
+                                                            danger
+                                                            icon={<DeleteOutlined />}
+                                                            onClick={() => removeUrl(item.id)}
+                                                            disabled={
+                                                                disabled ||
+                                                                isProcessing ||
+                                                                item.status === "downloading"
+                                                            }
+                                                        />,
+                                                    ]}
                                                 >
                                                     <List.Item.Meta
                                                         avatar={
