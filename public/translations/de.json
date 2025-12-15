@@ -1838,6 +1838,7 @@
                 "downloading": "Wird heruntergeladen...",
                 "downloaded": "Heruntergeladen",
                 "error": "Fehler",
+                "downloadAll": "Alle herunterladen",
                 "pending": "Ausstehend",
                 "invalidUrl": "Ungültige URL",
                 "invalidUrlDetails": "Bitte gib eine gültige URL ein",

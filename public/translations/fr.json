@@ -1833,6 +1833,7 @@
                 "supportedSourcesDescription": "yt-dlp supporte de nombreuses sources. Voici les plus populaires :",
                 "urlCount": "{{count}} URL(s) ajoutée(s)",
                 "clearAll": "Tout effacer",
+                "downloadAll": "Télécharger tout",
                 "fetchingInfo": "Récupération des infos...",
                 "ready": "Prêt",
                 "downloading": "Téléchargement...",

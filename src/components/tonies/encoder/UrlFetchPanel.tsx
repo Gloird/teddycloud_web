@@ -50,6 +50,8 @@ export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, disabled
         removeUrl,
         clearUrlList,
         formatDuration,
+        downloadAllUrls,
+        hasReadyUrls,
     } = urlFetch;
 
     const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -188,14 +190,24 @@ export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, disabled
                                             <Text strong>
                                                 {t("tonies.encoder.urlFetch.urlCount", { count: urlList.length })}
                                             </Text>
-                                            <Button
-                                                size="small"
-                                                danger
-                                                onClick={clearUrlList}
-                                                disabled={disabled || isProcessing}
-                                            >
-                                                {t("tonies.encoder.urlFetch.clearAll")}
-                                            </Button>
+                                            <Space>
+                                                <Button
+                                                    size="small"
+                                                    type="primary"
+                                                    onClick={() => downloadAllUrls()}
+                                                    disabled={disabled || isProcessing || !hasReadyUrls}
+                                                >
+                                                    {t("tonies.encoder.urlFetch.downloadAll")}
+                                                </Button>
+                                                <Button
+                                                    size="small"
+                                                    danger
+                                                    onClick={clearUrlList}
+                                                    disabled={disabled || isProcessing}
+                                                >
+                                                    {t("tonies.encoder.urlFetch.clearAll")}
+                                                </Button>
+                                            </Space>
                                         </div>
 
                                         <List
@@ -204,20 +216,29 @@ export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, disabled
                                             renderItem={(item: UrlItem) => (
                                                 <List.Item
                                                     key={item.id}
-                                                    actions={[
-                                                        <Button
-                                                            key="delete"
-                                                            type="text"
-                                                            danger
-                                                            icon={<DeleteOutlined />}
-                                                            onClick={() => removeUrl(item.id)}
-                                                            disabled={
-                                                                disabled ||
-                                                                isProcessing ||
-                                                                item.status === "downloading"
-                                                            }
-                                                        />,
-                                                    ]}
+                                                            actions={[
+                                                                <Button
+                                                                    key="download"
+                                                                    type="text"
+                                                                    icon={<CloudDownloadOutlined />}
+                                                                    onClick={() => downloadUrl(item)}
+                                                                    disabled={
+                                                                        disabled || isProcessing || item.status === "downloading"
+                                                                    }
+                                                                />,
+                                                                <Button
+                                                                    key="delete"
+                                                                    type="text"
+                                                                    danger
+                                                                    icon={<DeleteOutlined />}
+                                                                    onClick={() => removeUrl(item.id)}
+                                                                    disabled={
+                                                                        disabled ||
+                                                                        isProcessing ||
+                                                                        item.status === "downloading"
+                                                                    }
+                                                                />,
+                                                            ]}
                                                 >
                                                     <List.Item.Meta
                                                         avatar={
