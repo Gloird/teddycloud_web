@@ -1,3 +1,13 @@
+// -----------------------------------------------------------------------------
+// TeddyCloud - interface Web (App)
+// -----------------------------------------------------------------------------
+// Ce fichier est le point d'entrée principal de l'application React.
+// Il configure le thème, le routage et englobe l'application avec les
+// fournisseurs de contexte (`TeddyCloudProvider`, `AudioProvider`).
+//
+// Toutes les modifications structurelles doivent être documentées en français
+// via des JSDoc/TSDoc au niveau des composants exportés et des hooks.
+// -----------------------------------------------------------------------------
 import { ConfigProvider, Layout, theme } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
@@ -57,6 +67,17 @@ import "./styles/matrix/matrix.css";
 import { detectColorScheme } from "./utils/browser/browserUtils";
 import { AttributionPage } from "./pages/community/AttributionPage";
 
+/**
+ * Composant principal de l'application web.
+ *
+ * Il gère :
+ * - la sélection du thème (clair / sombre / matrix)
+ * - l'initialisation des providers de contexte
+ * - la définition des routes React-Router
+ *
+ * Remarques : tous les commentaires publics et la documentation doivent
+ * être fournis en français pour ce fork.
+ */
 function App() {
     const { defaultAlgorithm, darkAlgorithm } = theme;
 
