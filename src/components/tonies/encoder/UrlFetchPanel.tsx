@@ -27,6 +27,7 @@ import { useTranslation } from "react-i18next";
 import { UrlItem, SUPPORTED_SOURCES, QUALITY_OPTIONS, useUrlFetch } from "./hooks/useUrlFetch";
 import EncodeQueueModal from "./modals/EncodeQueueModal";
 import { useEncodeQueue } from "./hooks/useEncodeQueue";
+import { useEncoder } from "./hooks/useEncoder";
 import { message } from "antd";
 
 const { Text } = Typography;
@@ -60,6 +61,7 @@ export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, disabled
 
     const [queueModalVisible, setQueueModalVisible] = React.useState(false);
     const encode = useEncodeQueue();
+    const encoder = useEncoder();
 
     const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {
@@ -237,36 +239,20 @@ export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, disabled
                                                             }
                                                         />,
                                                         <Button key="addqueue" type="text" onClick={async () => {
-                                                            // create or pick a queue, download if needed, then add to queue
-                                                            let queueId: string | null = null;
-                                                            if (encode.queues && encode.queues.length > 0) {
-                                                                queueId = encode.queues[0].queueId;
-                                                            } else {
-                                                                queueId = await encode.createQueue("auto");
-                                                            }
-                                                            if (!queueId) {
-                                                                message.error("Could not create or find queue");
-                                                                return;
-                                                            }
-
+                                                            // Download if needed, then add imported file to upload list
                                                             let filePath = item.filePath;
                                                             if (!filePath) {
-                                                                // download first
                                                                 const fp = await downloadUrl(item);
                                                                 if (!fp) {
-                                                                    message.error("Download failed, cannot add to queue");
+                                                                    message.error("Download failed, cannot import");
                                                                     return;
                                                                 }
                                                                 filePath = fp;
                                                             }
 
-                                                            const ok = await encode.addToQueue(queueId, filePath);
-                                                            if (ok) {
-                                                                message.success("Added to encode queue");
-                                                            } else {
-                                                                message.error("Failed to add to encode queue");
-                                                            }
-                                                            // optionally open modal
+                                                            // add to encoder upload list with source metadata
+                                                            encoder.addServerFile(filePath, item.title || undefined, item.url || item.source || undefined);
+                                                            message.success("Imported into upload list");
                                                             setQueueModalVisible(true);
                                                         }}>
                                                             Add to queue

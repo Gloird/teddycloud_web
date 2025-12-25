@@ -2,6 +2,12 @@ import { UploadFile } from "antd";
 
 export interface MyUploadFile<T = any> extends UploadFile<T> {
     file?: File;
+    /** server-side path for files imported from URL (content dir) */
+    serverPath?: string;
+    /** source type: 'upload' for local file, 'url' for imported from remote */
+    sourceType?: "upload" | "url";
+    /** optional source information (origin URL or service) */
+    sourceInfo?: string;
 }
 
 const TARGET_SAMPLE_RATE = 48000;

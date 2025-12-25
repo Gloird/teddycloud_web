@@ -214,7 +214,8 @@ export const useUrlFetch = () => {
                                 : u
                         )
                     );
-                    return result.filePath;
+                    // Retourner la relativePath si fournie par le serveur (utile pour encodage côté serveur)
+                    return result.relativePath || result.filePath;
                 } else {
                     setUrlList((prev: UrlItem[]) =>
                         prev.map((u: UrlItem) =>

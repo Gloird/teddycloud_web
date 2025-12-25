@@ -7,6 +7,7 @@ import { CSS } from "@dnd-kit/utilities";
 
 import { humanFileSize } from "../../../../utils/files/humanFileSize";
 import { MyUploadFile } from "../../../../utils/audio/audioEncoder";
+import { Tag } from "antd";
 
 const { Text } = Typography;
 
@@ -55,6 +56,12 @@ export const DraggableUploadListItem = ({
                     <span className="">{file.name}</span>
                     <br />
                     <Text type="secondary">{humanFileSize(file.size ? file.size : -1)}</Text>
+                    {/* Affiche un petit tag indiquant l'origine (upload local ou import depuis URL) */}
+                    {file.sourceType === "url" ? (
+                        <div style={{ marginTop: 4 }}>
+                            <Tag color="blue">Importé: {file.sourceInfo ?? "url"}</Tag>
+                        </div>
+                    ) : null}
                 </span>
                 <span className="ant-upload-list-item-actions picture">
                     <Button

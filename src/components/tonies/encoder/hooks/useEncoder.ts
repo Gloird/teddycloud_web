@@ -198,6 +198,25 @@ export const useEncoder = () => {
         setFileList([]);
     };
 
+    const addServerFile = (serverPath: string, name?: string, sourceInfo?: string) => {
+        const uid = `srv-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+        const myFile: MyUploadFile = {
+            uid,
+            name: name || serverPath.split("/").pop() || uid,
+            status: "done",
+            percent: 100,
+            serverPath,
+            sourceType: "url",
+            sourceInfo,
+        } as MyUploadFile;
+
+        setFileList((prev) => [...prev, myFile]);
+        if (fileList.length === 0 && tafFilename === "") {
+            const fileNameWithoutExtension = myFile.name.replace(/\.[^/.]+$/, "");
+            setTafFilename(fileNameWithoutExtension);
+        }
+    };
+
     // -------------------------------------------------
     // CreateDirectoryModal-Handling
     // -------------------------------------------------
@@ -227,81 +246,80 @@ export const useEncoder = () => {
     // -------------------------------------------------
 
     const handleUpload = async () => {
+        // Nouveau flux : si la liste contient des fichiers locaux (File) et/ou des fichiers côté serveur (serverPath),
+        // nous uploadons d'abord les fichiers locaux dans le répertoire choisi via `/api/fileUpload`, puis
+        // nous invoquons `/api/fileEncode` en fournissant la liste complète des sources (chemins relatifs sous content).
         setUploading(true);
-        const formData = new FormData();
         const key = "encoding-" + tafFilename + ".taf";
-
         addLoadingNotification(key, t("tonies.encoder.uploading"), t("tonies.encoder.uploading"));
 
-        for (const file of fileList) {
-            addLoadingNotification(
-                key,
-                t("tonies.encoder.uploading"),
-                t("tonies.encoder.uploadingDetails", { file: file.name })
-            );
+        const basePath = getPathFromNodeId(treeNodeId);
+        const localFiles = fileList.filter((f) => !f.serverPath && f.file);
+        const serverFiles = fileList.filter((f) => f.serverPath);
+
+        const sourcePaths: string[] = [];
+
+        // 1) Upload les fichiers locaux vers le dossier sélectionné
+        if (localFiles.length > 0) {
+            const uploadForm = new FormData();
+            for (const f of localFiles) {
+                uploadForm.append("file", f.file as File, f.name);
+            }
+
             try {
-                await new Promise<void>((resolve, reject) =>
-                    (encoderUpload as any)(resolve, reject, formData, fileList, file, debugPCMObjects)
-                );
-            } catch (error) {
-                addNotification(
-                    NotificationTypeEnum.Error,
-                    t("tonies.encoder.processingError"),
-                    t("tonies.encoder.errorFileProcessing") + error,
-                    t("tonies.title")
-                );
+                const res = await api.apiPostTeddyCloudFormDataRaw(`/api/fileUpload?path=${encodeURIComponent(basePath)}`, uploadForm);
+                if (!res.ok) {
+                    addNotification(NotificationTypeEnum.Error, t("tonies.encoder.uploadFailed"), t("tonies.encoder.uploadFailedDetails") + res.statusText, t("tonies.title"));
+                    closeLoadingNotification(key);
+                    setUploading(false);
+                    return;
+                }
+                // Ajouter les chemins relatifs des fichiers uploadés
+                for (const f of localFiles) {
+                    sourcePaths.push(`${basePath}/${f.name}`);
+                }
+            } catch (err) {
+                addNotification(NotificationTypeEnum.Error, t("tonies.encoder.uploadFailed"), t("tonies.encoder.uploadFailedDetails") + err, t("tonies.title"));
                 closeLoadingNotification(key);
                 setUploading(false);
                 return;
             }
         }
 
-        const currentUnixTime = Math.floor(Date.now() / 1000);
-        const queryParams = {
-            name: tafFilename + ".taf",
-            audioId: currentUnixTime - 0x50000000,
-            path: getPathFromNodeId(treeNodeId),
-            special: "library",
-        };
+        // 2) Ajouter les fichiers déjà présents côté serveur
+        for (const sf of serverFiles) {
+            // `serverPath` doit être un chemin relatif sous le dossier content (ex: /default/xxx.mp3)
+            // On s'assure d'enlever un éventuel slash initial
+            let rel = sf.serverPath || "";
+            if (rel.startsWith("/")) rel = rel.substring(1);
+            sourcePaths.push(rel);
+        }
 
-        setProcessing(true);
-        const queryString = createQueryString(queryParams);
-
-        try {
-            addLoadingNotification(
-                key,
-                t("tonies.encoder.processing"),
-                t("tonies.encoder.processingDetails", { file: tafFilename + ".taf" })
-            );
-            const response = await api.apiPostTeddyCloudFormDataRaw(`/api/pcmUpload?${queryString}`, formData);
-            closeLoadingNotification(key);
-            if (response.ok) {
-                addNotification(
-                    NotificationTypeEnum.Success,
-                    t("tonies.encoder.uploadSuccessful"),
-                    t("tonies.encoder.uploadSuccessfulDetails", { file: tafFilename + ".taf" }),
-                    t("tonies.title")
-                );
-                setFileList([]);
-                setTafFilename("");
-            } else {
-                addNotification(
-                    NotificationTypeEnum.Error,
-                    t("tonies.encoder.uploadFailed"),
-                    t("tonies.encoder.uploadFailedDetails") + response.statusText,
-                    t("tonies.title")
-                );
+        // 3) Si nous avons des sources (locales uploadées ou côté serveur), invoquer `/api/fileEncode`
+        if (sourcePaths.length > 0) {
+            setProcessing(true);
+            const target = `${basePath}/${tafFilename}.taf`;
+            const body = sourcePaths.map((s) => `source=${encodeURIComponent(s)}`).join("&") + `&target=${encodeURIComponent(target)}`;
+            try {
+                const resp = await api.apiPostTeddyCloudRaw(`/api/fileEncode?special=library`, body);
+                closeLoadingNotification(key);
+                if (resp.ok) {
+                    addNotification(NotificationTypeEnum.Success, t("tonies.encoder.uploadSuccessful"), t("tonies.encoder.uploadSuccessfulDetails", { file: tafFilename + ".taf" }), t("tonies.title"));
+                    setFileList([]);
+                    setTafFilename("");
+                } else {
+                    addNotification(NotificationTypeEnum.Error, t("tonies.encoder.uploadFailed"), t("tonies.encoder.uploadFailedDetails") + resp.statusText, t("tonies.title"));
+                }
+            } catch (err) {
+                closeLoadingNotification(key);
+                addNotification(NotificationTypeEnum.Error, t("tonies.encoder.uploadFailed"), t("tonies.encoder.uploadFailedDetails") + err, t("tonies.title"));
+            } finally {
+                setProcessing(false);
+                setUploading(false);
             }
-        } catch (err) {
+        } else {
+            // Pas de sources — rien à faire
             closeLoadingNotification(key);
-            addNotification(
-                NotificationTypeEnum.Error,
-                t("tonies.encoder.uploadFailed"),
-                t("tonies.encoder.uploadFailedDetails") + err,
-                t("tonies.title")
-            );
-        } finally {
-            setProcessing(false);
             setUploading(false);
         }
     };
@@ -430,5 +448,6 @@ export const useEncoder = () => {
 
         // Helper
         invalidCharactersAsString,
+        addServerFile,
     };
 };
