@@ -21,6 +21,7 @@ export const Encoder: React.FC = () => {
     const { t } = useTranslation();
     const { token } = useToken();
 
+    const encoder = useEncoder();
     const {
         fileList,
         uploading,
@@ -52,7 +53,7 @@ export const Encoder: React.FC = () => {
 
         // Helper
         invalidCharactersAsString,
-    } = useEncoder();
+    } = encoder;
 
     const urlFetch = useUrlFetch();
 
@@ -102,7 +103,7 @@ export const Encoder: React.FC = () => {
         <>
             <Space orientation="vertical" style={{ display: "flex" }}>
                 {/* URL Fetch Panel - Always visible at top */}
-                <UrlFetchPanel urlFetch={urlFetch} disabled={uploading || processing} />
+                <UrlFetchPanel urlFetch={urlFetch} encoder={encoder} disabled={uploading || processing} />
 
                 <DndContext sensors={[sensor]} onDragEnd={onDragEnd}>
                     <SortableContext

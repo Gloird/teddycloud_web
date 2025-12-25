@@ -25,9 +25,7 @@ import {
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { UrlItem, SUPPORTED_SOURCES, QUALITY_OPTIONS, useUrlFetch } from "./hooks/useUrlFetch";
-import EncodeQueueModal from "./modals/EncodeQueueModal";
-import { useEncodeQueue } from "./hooks/useEncodeQueue";
-import { useEncoder } from "./hooks/useEncoder";
+import type { useEncoder } from "./hooks/useEncoder";
 import { message } from "antd";
 
 const { Text } = Typography;
@@ -35,10 +33,11 @@ const { useToken } = theme;
 
 interface UrlFetchPanelProps {
     urlFetch: ReturnType<typeof useUrlFetch>;
+    encoder: ReturnType<typeof useEncoder>;
     disabled?: boolean;
 }
 
-export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, disabled = false }) => {
+export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, encoder, disabled = false }) => {
     const { t } = useTranslation();
     const { token } = useToken();
 
@@ -59,9 +58,7 @@ export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, disabled
         hasReadyUrls,
     } = urlFetch;
 
-    const [queueModalVisible, setQueueModalVisible] = React.useState(false);
-    const encode = useEncodeQueue();
-    const encoder = useEncoder();
+    // encoder is passed from parent to share the same upload list/state
 
     const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {
@@ -200,17 +197,7 @@ export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, disabled
                                                 {t("tonies.encoder.urlFetch.urlCount", { count: urlList.length })}
                                             </Text>
                                             <Space>
-                                                <Button
-                                                    size="small"
-                                                    type="primary"
-                                                    onClick={() => downloadAllUrls()}
-                                                    disabled={disabled || isProcessing || !hasReadyUrls}
-                                                >
-                                                    {t("tonies.encoder.urlFetch.downloadAll")}
-                                                </Button>
-                                                <Button size="small" onClick={() => setQueueModalVisible(true)}>
-                                                    Manage encode queue
-                                                </Button>
+                                                {/* Le téléchargement direct n'est pas utilisé — seul le nettoyage reste */}
                                                 <Button
                                                     size="small"
                                                     danger
@@ -229,16 +216,7 @@ export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, disabled
                                                 <List.Item
                                                     key={item.id}
                                                     actions={[
-                                                        <Button
-                                                            key="download"
-                                                            type="text"
-                                                            icon={<CloudDownloadOutlined />}
-                                                            onClick={() => downloadUrl(item)}
-                                                            disabled={
-                                                                disabled || isProcessing || item.status === "downloading"
-                                                            }
-                                                        />,
-                                                        <Button key="addqueue" type="text" onClick={async () => {
+                                                        <Button key="import" type="text" onClick={async () => {
                                                             // Download if needed, then add imported file to upload list
                                                             let filePath = item.filePath;
                                                             if (!filePath) {
@@ -252,10 +230,9 @@ export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, disabled
 
                                                             // add to encoder upload list with source metadata
                                                             encoder.addServerFile(filePath, item.title || undefined, item.url || item.source || undefined);
-                                                            message.success("Imported into upload list");
-                                                            setQueueModalVisible(true);
+                                                            message.success("Importé dans la liste d'upload");
                                                         }}>
-                                                            Add to queue
+                                                            Import
                                                         </Button>,
                                                         <Button
                                                             key="delete"
@@ -329,7 +306,7 @@ export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, disabled
                     },
                 ]}
             />
-            <EncodeQueueModal visible={queueModalVisible} onClose={() => setQueueModalVisible(false)} />
+            {/* La modal de queue a été supprimée — import direct dans la liste d'upload */}
         </div>
     );
 };
