@@ -25,6 +25,9 @@ import {
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { UrlItem, SUPPORTED_SOURCES, QUALITY_OPTIONS, useUrlFetch } from "./hooks/useUrlFetch";
+import EncodeQueueModal from "./modals/EncodeQueueModal";
+import { useEncodeQueue } from "./hooks/useEncodeQueue";
+import { message } from "antd";
 
 const { Text } = Typography;
 const { useToken } = theme;
@@ -54,6 +57,9 @@ export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, disabled
         downloadUrl,
         hasReadyUrls,
     } = urlFetch;
+
+    const [queueModalVisible, setQueueModalVisible] = React.useState(false);
+    const encode = useEncodeQueue();
 
     const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {
@@ -200,6 +206,9 @@ export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, disabled
                                                 >
                                                     {t("tonies.encoder.urlFetch.downloadAll")}
                                                 </Button>
+                                                <Button size="small" onClick={() => setQueueModalVisible(true)}>
+                                                    Manage encode queue
+                                                </Button>
                                                 <Button
                                                     size="small"
                                                     danger
@@ -227,6 +236,41 @@ export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, disabled
                                                                 disabled || isProcessing || item.status === "downloading"
                                                             }
                                                         />,
+                                                        <Button key="addqueue" type="text" onClick={async () => {
+                                                            // create or pick a queue, download if needed, then add to queue
+                                                            let queueId: string | null = null;
+                                                            if (encode.queues && encode.queues.length > 0) {
+                                                                queueId = encode.queues[0].queueId;
+                                                            } else {
+                                                                queueId = await encode.createQueue("auto");
+                                                            }
+                                                            if (!queueId) {
+                                                                message.error("Could not create or find queue");
+                                                                return;
+                                                            }
+
+                                                            let filePath = item.filePath;
+                                                            if (!filePath) {
+                                                                // download first
+                                                                const fp = await downloadUrl(item);
+                                                                if (!fp) {
+                                                                    message.error("Download failed, cannot add to queue");
+                                                                    return;
+                                                                }
+                                                                filePath = fp;
+                                                            }
+
+                                                            const ok = await encode.addToQueue(queueId, filePath);
+                                                            if (ok) {
+                                                                message.success("Added to encode queue");
+                                                            } else {
+                                                                message.error("Failed to add to encode queue");
+                                                            }
+                                                            // optionally open modal
+                                                            setQueueModalVisible(true);
+                                                        }}>
+                                                            Add to queue
+                                                        </Button>,
                                                         <Button
                                                             key="delete"
                                                             type="text"
@@ -299,6 +343,7 @@ export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, disabled
                     },
                 ]}
             />
+            <EncodeQueueModal visible={queueModalVisible} onClose={() => setQueueModalVisible(false)} />
         </div>
     );
 };
