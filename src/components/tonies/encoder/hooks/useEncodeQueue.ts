@@ -26,7 +26,7 @@ export const useEncodeQueue = () => {
 
     const fetchQueues = useCallback(async () => {
         try {
-            const res = await api.apiGetTeddyCloudRaw(`/api/encodeQueue/list`);
+            const res = await api.apiGetTeddyCloudApiRaw(`/api/encodeQueue/list`);
             const data = await res.json();
             if (data && data.queues) {
                 setQueues(data.queues.map((q: any) => ({ queueId: q.queueId, name: q.name, items: q.items, active: q.active })));

@@ -27,7 +27,7 @@ export const EncodeQueueModal: React.FC<Props> = ({ visible, onClose }) => {
     };
 
     const handleStart = async () => {
-        if (!selectedQueue) return message.warn("Select a queue first");
+        if (!selectedQueue) return message.warning("Select a queue first");
         const ok = await startQueue(selectedQueue);
         if (ok) message.success("Queue started");
         else message.error("Failed to start queue");
