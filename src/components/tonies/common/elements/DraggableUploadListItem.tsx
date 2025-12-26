@@ -53,15 +53,39 @@ export const DraggableUploadListItem = ({
                     </span>
                 </div>
                 <span className="ant-upload-list-item-name" title={file.name}>
-                    <span className="">{file.name}</span>
-                    <br />
-                    <Text type="secondary">{humanFileSize(file.size ? file.size : -1)}</Text>
-                    {/* Affiche un petit tag indiquant l'origine (upload local ou import depuis URL) */}
-                    {file.sourceType === "url" ? (
-                        <div style={{ marginTop: 4 }}>
-                            <Tag color="blue">Importé: {file.sourceInfo ?? "url"}</Tag>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ display: "flex", flexDirection: "column" }}>
+                            <span className="">{file.name}</span>
+                            <Text type="secondary">{humanFileSize(file.size ?? -1)}</Text>
                         </div>
-                    ) : null}
+                        <div style={{ flex: 1 }}>
+                            {file.uploader && (
+                                <div>
+                                    <Text type="secondary" style={{ fontSize: 12 }}>
+                                        {file.uploader}
+                                    </Text>
+                                </div>
+                            )}
+                            {file.duration && (
+                                <div>
+                                    <Text type="secondary" style={{ fontSize: 12 }}>
+                                        {Math.floor(file.duration / 60)}:{(file.duration % 60).toString().padStart(2, "0")}
+                                    </Text>
+                                </div>
+                            )}
+                        </div>
+                        <div style={{ display: "inline-block", marginLeft: 8 }}>
+                            {file.sourceType === "url" && (
+                                <Tag color="green">Importé{file.sourceInfo ? `: ${file.sourceInfo}` : ""}</Tag>
+                            )}
+                            {file.serverPath && file.sourceType !== "url" && (
+                                <Tag color="purple">Fichier</Tag>
+                            )}
+                            {file.sourceType === "upload" && !file.serverPath && (
+                                <Tag color="orange">Local</Tag>
+                            )}
+                        </div>
+                    </div>
                 </span>
                 <span className="ant-upload-list-item-actions picture">
                     <Button

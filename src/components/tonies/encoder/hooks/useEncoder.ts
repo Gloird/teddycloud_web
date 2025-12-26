@@ -198,7 +198,16 @@ export const useEncoder = () => {
         setFileList([]);
     };
 
-    const addServerFile = (serverPath: string, name?: string, sourceInfo?: string) => {
+    const hasServerFiles = fileList.some((f) => !!f.serverPath || f.sourceType === "url");
+
+    const addServerFile = (
+        serverPath: string,
+        name?: string,
+        sourceInfo?: string,
+        thumbnail?: string,
+        duration?: number,
+        uploader?: string
+    ) => {
         const uid = `srv-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
         const myFile: MyUploadFile = {
             uid,
@@ -208,6 +217,9 @@ export const useEncoder = () => {
             serverPath,
             sourceType: "url",
             sourceInfo,
+            thumbnail,
+            duration,
+            uploader,
         } as MyUploadFile;
 
         setFileList((prev) => [...prev, myFile]);
@@ -301,7 +313,10 @@ export const useEncoder = () => {
             const target = `${basePath}/${tafFilename}.taf`;
             const body = sourcePaths.map((s) => `source=${encodeURIComponent(s)}`).join("&") + `&target=${encodeURIComponent(target)}`;
             try {
-                const resp = await api.apiPostTeddyCloudRaw(`/api/fileEncode?special=library`, body);
+                // Determine whether we should request encoding in library or content.
+                // If any source looks like an absolute path (starts with '/'), send it as-is.
+                // By default call /api/fileEncode without special to operate on content dir.
+                const resp = await api.apiPostTeddyCloudRaw(`/api/fileEncode`, body);
                 closeLoadingNotification(key);
                 if (resp.ok) {
                     addNotification(NotificationTypeEnum.Success, t("tonies.encoder.uploadSuccessful"), t("tonies.encoder.uploadSuccessfulDetails", { file: tafFilename + ".taf" }), t("tonies.title"));
@@ -445,6 +460,9 @@ export const useEncoder = () => {
         // CreateDirectoryModal
         setRebuildList,
         setTreeData,
+
+        // Flags
+        hasServerFiles,
 
         // Helper
         invalidCharactersAsString,

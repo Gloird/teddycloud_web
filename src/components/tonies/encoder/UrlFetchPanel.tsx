@@ -4,8 +4,6 @@ import {
     Input,
     Select,
     Space,
-    List,
-    Progress,
     Tag,
     Tooltip,
     Typography,
@@ -13,20 +11,14 @@ import {
     Avatar,
     theme,
 } from "antd";
-import {
-    LinkOutlined,
-    DeleteOutlined,
-    CloudDownloadOutlined,
-    CheckCircleOutlined,
-    CloseCircleOutlined,
-    LoadingOutlined,
-    InfoCircleOutlined,
-    ClockCircleOutlined,
-} from "@ant-design/icons";
+import { LinkOutlined, CloudDownloadOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { UrlItem, SUPPORTED_SOURCES, QUALITY_OPTIONS, useUrlFetch } from "./hooks/useUrlFetch";
+import { TeddyCloudApi } from "../../../../api";
+import { defaultAPIConfig } from "../../../../config/defaultApiConfig";
+import { useTeddyCloud } from "../../../../contexts/TeddyCloudContext";
+import { NotificationTypeEnum } from "../../../../types/teddyCloudNotificationTypes";
 import type { useEncoder } from "./hooks/useEncoder";
-import { message } from "antd";
 
 const { Text } = Typography;
 const { useToken } = theme;
@@ -42,66 +34,88 @@ export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, encoder,
     const { token } = useToken();
 
     const {
-        urlList,
+        // urlList,
         inputUrl,
         quality,
         isProcessing,
-        hasUrls,
+        // hasUrls,
         setInputUrl,
         setQuality,
-        addUrl,
-        removeUrl,
+        // addUrl,
+        // removeUrl,
         clearUrlList,
         formatDuration,
-        downloadAllUrls,
-        downloadUrl,
-        hasReadyUrls,
+        // downloadAllUrls,
+        // downloadUrl,
+        // hasReadyUrls,
     } = urlFetch;
+
+    const api = new TeddyCloudApi(defaultAPIConfig());
+    const { addNotification } = useTeddyCloud();
 
     // encoder is passed from parent to share the same upload list/state
 
     const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {
-            addUrl();
+            handleImport();
         }
     };
 
-    const getStatusIcon = (item: UrlItem) => {
-        switch (item.status) {
-            case "fetching-info":
-            case "downloading":
-                return <LoadingOutlined spin style={{ color: token.colorPrimary }} />;
-            case "ready":
-                return <CheckCircleOutlined style={{ color: token.colorSuccess }} />;
-            case "complete":
-                return <CheckCircleOutlined style={{ color: token.colorSuccess }} />;
-            case "error":
-                return <CloseCircleOutlined style={{ color: token.colorError }} />;
-            default:
-                return <ClockCircleOutlined style={{ color: token.colorTextSecondary }} />;
+    const handleImport = async () => {
+        const url = inputUrl.trim();
+        if (!url) return;
+
+        try {
+            new URL(url);
+        } catch {
+            addNotification(
+                NotificationTypeEnum.Error,
+                t("tonies.encoder.urlFetch.invalidUrl"),
+                t("tonies.encoder.urlFetch.invalidUrlDetails"),
+                t("tonies.title")
+            );
+            return;
+        }
+
+        // 1) get info
+        try {
+            const infoResp = await api.apiPostTeddyCloudRaw("/api/urlInfo", `url=${encodeURIComponent(url)}`);
+            const info = await infoResp.json();
+            if (!info.success) {
+                addNotification(NotificationTypeEnum.Error, t("tonies.encoder.urlFetch.error"), info.error || "Failed to get info", t("tonies.title"));
+                return;
+            }
+
+            const title = info.data?.title;
+            const thumbnail = info.data?.thumbnail;
+            const duration = info.data?.duration;
+            const uploader = info.data?.uploader;
+
+            // 2) download
+            addNotification(NotificationTypeEnum.Info, t("tonies.encoder.urlFetch.downloading"), title || url, t("tonies.title"));
+            const fetchResp = await api.apiPostTeddyCloudRaw("/api/urlFetch", `url=${encodeURIComponent(url)}&quality=${encodeURIComponent(quality)}`);
+            const fetchRes = await fetchResp.json();
+            if (!fetchRes.success) {
+                addNotification(NotificationTypeEnum.Error, t("tonies.encoder.urlFetch.error"), fetchRes.error || "Download failed", t("tonies.title"));
+                return;
+            }
+
+            const filePath = fetchRes.relativePath || fetchRes.filePath;
+            if (!filePath) {
+                addNotification(NotificationTypeEnum.Error, t("tonies.encoder.urlFetch.error"), "No file path returned", t("tonies.title"));
+                return;
+            }
+
+            // 3) add to encoder list with metadata
+            encoder.addServerFile(filePath, title || undefined, url, thumbnail || undefined, duration || undefined, uploader || undefined);
+            addNotification(NotificationTypeEnum.Success, t("tonies.encoder.urlFetch.downloaded"), title || filePath, t("tonies.title"));
+            setInputUrl("");
+        } catch (err) {
+            addNotification(NotificationTypeEnum.Error, t("tonies.encoder.urlFetch.error"), String(err), t("tonies.title"));
         }
     };
 
-    const getStatusTag = (item: UrlItem) => {
-        switch (item.status) {
-            case "fetching-info":
-                return <Tag color="processing">{t("tonies.encoder.urlFetch.fetchingInfo")}</Tag>;
-            case "ready":
-                return <Tag color="success">{t("tonies.encoder.urlFetch.ready")}</Tag>;
-            case "downloading":
-                return <Tag color="processing">{t("tonies.encoder.urlFetch.downloading")}</Tag>;
-            case "complete":
-                return <Tag color="success">{t("tonies.encoder.urlFetch.downloaded")}</Tag>;
-            case "error":
-                return (
-                    <Tooltip title={item.error}>
-                        <Tag color="error">{t("tonies.encoder.urlFetch.error")}</Tag>
-                    </Tooltip>
-                );
-            default:
-                return <Tag>{t("tonies.encoder.urlFetch.pending")}</Tag>;
-        }
-    };
+    // URL imports are imported directly; status badges are not shown in a separate list.
 
     const supportedSourcesContent = (
         <div style={{ padding: "8px 0" }}>
@@ -158,7 +172,7 @@ export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, encoder,
                                     <Button
                                         size="middle"
                                         type="primary"
-                                        onClick={addUrl}
+                                        onClick={handleImport}
                                         disabled={disabled || isProcessing || !inputUrl.trim()}
                                         icon={<CloudDownloadOutlined />}
                                     >
@@ -183,124 +197,7 @@ export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, encoder,
                                     ]}
                                 />
 
-                                {/* URL List */}
-                                {hasUrls && (
-                                    <>
-                                        <div
-                                            style={{
-                                                display: "flex",
-                                                justifyContent: "space-between",
-                                                alignItems: "center",
-                                            }}
-                                        >
-                                            <Text strong>
-                                                {t("tonies.encoder.urlFetch.urlCount", { count: urlList.length })}
-                                            </Text>
-                                            <Space>
-                                                {/* Le téléchargement direct n'est pas utilisé — seul le nettoyage reste */}
-                                                <Button
-                                                    size="small"
-                                                    danger
-                                                    onClick={clearUrlList}
-                                                    disabled={disabled || isProcessing}
-                                                >
-                                                    {t("tonies.encoder.urlFetch.clearAll")}
-                                                </Button>
-                                            </Space>
-                                        </div>
-
-                                        <List
-                                            itemLayout="horizontal"
-                                            dataSource={urlList}
-                                            renderItem={(item: UrlItem) => (
-                                                <List.Item
-                                                    key={item.id}
-                                                    actions={[
-                                                        <Button key="import" type="text" onClick={async () => {
-                                                            // Download if needed, then add imported file to upload list
-                                                            let filePath = item.filePath;
-                                                            if (!filePath) {
-                                                                const fp = await downloadUrl(item);
-                                                                if (!fp) {
-                                                                    message.error("Download failed, cannot import");
-                                                                    return;
-                                                                }
-                                                                filePath = fp;
-                                                            }
-
-                                                            // add to encoder upload list with source metadata
-                                                            encoder.addServerFile(filePath, item.title || undefined, item.url || item.source || undefined);
-                                                            message.success("Importé dans la liste d'upload");
-                                                        }}>
-                                                            Import
-                                                        </Button>,
-                                                        <Button
-                                                            key="delete"
-                                                            type="text"
-                                                            danger
-                                                            icon={<DeleteOutlined />}
-                                                            onClick={() => removeUrl(item.id)}
-                                                            disabled={
-                                                                disabled ||
-                                                                isProcessing ||
-                                                                item.status === "downloading"
-                                                            }
-                                                        />,
-                                                    ]}
-                                                >
-                                                    <List.Item.Meta
-                                                        avatar={
-                                                            item.thumbnail ? (
-                                                                <Avatar
-                                                                    shape="square"
-                                                                    size={48}
-                                                                    src={item.thumbnail}
-                                                                />
-                                                            ) : (
-                                                                <Avatar shape="square" size={48} icon={getStatusIcon(item)} />
-                                                            )
-                                                        }
-                                                        title={
-                                                            <Space>
-                                                                <Text
-                                                                    ellipsis
-                                                                    style={{ maxWidth: 400 }}
-                                                                    title={item.title || item.url}
-                                                                >
-                                                                    {item.title || item.url}
-                                                                </Text>
-                                                                {getStatusTag(item)}
-                                                            </Space>
-                                                        }
-                                                        description={
-                                                            <Space direction="vertical" size={0}>
-                                                                {item.uploader && (
-                                                                    <Text type="secondary" style={{ fontSize: 12 }}>
-                                                                        {item.uploader}
-                                                                        {item.source && ` • ${item.source}`}
-                                                                        {item.duration && ` • ${formatDuration(item.duration)}`}
-                                                                    </Text>
-                                                                )}
-                                                                {item.status === "downloading" && (
-                                                                    <Progress
-                                                                        percent={item.progress}
-                                                                        size="small"
-                                                                        status="active"
-                                                                    />
-                                                                )}
-                                                                {item.status === "error" && (
-                                                                    <Text type="danger" style={{ fontSize: 12 }}>
-                                                                        {item.error}
-                                                                    </Text>
-                                                                )}
-                                                            </Space>
-                                                        }
-                                                    />
-                                                </List.Item>
-                                            )}
-                                        />
-                                    </>
-                                )}
+                                {/* URL imports are imported directly into the encoder file list; no separate URL list shown. */}
                             </Space>
                         ),
                     },

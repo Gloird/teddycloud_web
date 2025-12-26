@@ -53,6 +53,7 @@ export const Encoder: React.FC = () => {
 
         // Helper
         invalidCharactersAsString,
+        hasServerFiles,
     } = encoder;
 
     const urlFetch = useUrlFetch();
@@ -91,7 +92,7 @@ export const Encoder: React.FC = () => {
         }
 
         // Proceed with encoding (server-side or browser-side)
-        if (useFrontendEncoding && fileList.length > 0 && !urlFetch.hasReadyUrls) {
+        if (useFrontendEncoding && fileList.length > 0 && !urlFetch.hasReadyUrls && !hasServerFiles) {
             // WASM encoding only works with local files, not URL downloads
             handleWasmUpload();
         } else {
@@ -244,14 +245,23 @@ export const Encoder: React.FC = () => {
                                         gap: 16,
                                     }}
                                 >
-                                    <Switch
-                                        checkedChildren={t("tonies.encoder.browserSideEncoding")}
-                                        unCheckedChildren={t("tonies.encoder.serverSideEncoding")}
-                                        defaultChecked={useFrontendEncodingSetting}
-                                        checked={useFrontendEncoding}
-                                        onChange={setUseFrontendEncoding}
-                                        disabled={uploading || processing}
-                                    />
+                                    <Tooltip
+                                        open={!canHover ? false : undefined}
+                                        title={
+                                            hasServerFiles
+                                                ? t("tonies.encoder.browserSideEncodingDisabledUrlFiles")
+                                                : t("tonies.encoder.browserSideEncodingTooltip")
+                                        }
+                                    >
+                                        <Switch
+                                            checkedChildren={t("tonies.encoder.browserSideEncoding")}
+                                            unCheckedChildren={t("tonies.encoder.serverSideEncoding")}
+                                            defaultChecked={useFrontendEncodingSetting}
+                                            checked={useFrontendEncoding}
+                                            onChange={setUseFrontendEncoding}
+                                            disabled={uploading || processing || hasServerFiles}
+                                        />
+                                    </Tooltip>
                                     <Button
                                         type="primary"
                                         onClick={handleCombinedEncode}

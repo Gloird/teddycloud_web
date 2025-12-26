@@ -9,7 +9,7 @@
  * @return Formatted string.
  */
 export function humanFileSize(bytes: number, si = true, dp = 1) {
-    if (!bytes || bytes < 0) return "NaN";
+    if (bytes == null || bytes <= 0) return "";
 
     const thresh = si ? 1000 : 1024;
 

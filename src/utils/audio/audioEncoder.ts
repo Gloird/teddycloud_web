@@ -4,6 +4,12 @@ export interface MyUploadFile<T = any> extends UploadFile<T> {
     file?: File;
     /** server-side path for files imported from URL (content dir) */
     serverPath?: string;
+    /** optional thumbnail URL for imported server files */
+    thumbnail?: string;
+    /** optional duration in seconds for imported server files */
+    duration?: number;
+    /** optional uploader/author for imported server files */
+    uploader?: string;
     /** source type: 'upload' for local file, 'url' for imported from remote */
     sourceType?: "upload" | "url";
     /** optional source information (origin URL or service) */
