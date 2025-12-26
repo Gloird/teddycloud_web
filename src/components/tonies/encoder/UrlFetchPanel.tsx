@@ -14,10 +14,10 @@ import {
 import { LinkOutlined, CloudDownloadOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { UrlItem, SUPPORTED_SOURCES, QUALITY_OPTIONS, useUrlFetch } from "./hooks/useUrlFetch";
-import { TeddyCloudApi } from "../../../../api";
-import { defaultAPIConfig } from "../../../../config/defaultApiConfig";
-import { useTeddyCloud } from "../../../../contexts/TeddyCloudContext";
-import { NotificationTypeEnum } from "../../../../types/teddyCloudNotificationTypes";
+import { TeddyCloudApi } from "../../../api";
+import { defaultAPIConfig } from "../../../config/defaultApiConfig";
+import { useTeddyCloud } from "../../../contexts/TeddyCloudContext";
+import { NotificationTypeEnum } from "../../../types/teddyCloudNotificationTypes";
 import type { useEncoder } from "./hooks/useEncoder";
 
 const { Text } = Typography;
@@ -142,7 +142,6 @@ export const UrlFetchPanel: React.FC<UrlFetchPanelProps> = ({ urlFetch, encoder,
                             <Space>
                                 <LinkOutlined />
                                 {t("tonies.encoder.urlFetch.title")}
-                                {hasUrls && <Tag color="blue">{urlList.length}</Tag>}
                             </Space>
                         ),
                         children: (
